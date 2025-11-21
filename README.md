@@ -8,8 +8,11 @@ This project should deploy with two microservices
   Deploy static files directly
 
   #Project Files 
+  #(Optional bonus) API endpoint code + instructions
   server.js
+
+  #Code / scripts / notebook(s) with visualizations
   index.html
 
-  #DB Script with sample data file
+  #PostgreSQL schema + sample data load scripts & SQL query files (with comments if needed)
   DB-Script-Schema.sql
