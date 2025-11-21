@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Dynamic Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<h2>Engagement Trends</h2>
+<canvas id="trendChart"></canvas>
+
+<h2>Engagement Heatmap</h2>
+<canvas id="heatmapChart"></canvas>
+
+<h2>Volume vs Engagement</h2>
+<canvas id="scatterChart"></canvas>
+
+<div id="trend-output"></div>
+
+<script>
+
+// =======================================
+// 1. Dynamic Trend Chart
+// =======================================
+fetch("http://localhost:3000/api/engagement/trend")
+  .then(res => res.json())
+  .then(data => {
+
+    const labels = [...new Set(data.map(d => d.month.substring(0, 10)))];
+
+    // Group data by author
+    const authors = {};
+    data.forEach(d => {
+      if (!authors[d.author]) authors[d.author] = [];
+    });
+    Object.keys(authors).forEach(a => {
+      labels.forEach(m => {
+        const row = data.find(x => x.author === a && x.month.startsWith(m));
+        authors[a].push(row ? row.total_engagements : 0);
+      });
+    });
+
+    new Chart(document.getElementById('trendChart'), {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: Object.keys(authors).map(author => ({
+          label: author,
+          data: authors[author]
+        }))
+      }
+    });
+  });
+
+// =======================================
+// 2. Dynamic Heatmap (Bubble Chart)
+// =======================================
+fetch("http://localhost:3000/api/engagement/heatmap")
+  .then(res => res.json())
+  .then(data => {
+
+    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+    const dataset = data.map(d => ({
+      x: Number(d.hour),
+      y: Number(d.day_of_week),
+      r: Math.max(5, d.engagement_count / 5)
+    }));
+
+    new Chart(document.getElementById('heatmapChart'), {
+      type: 'bubble',
+      data: { datasets: [{ data: dataset }] },
+      options: {
+        scales: {
+          x: { min: 0, max: 23 },
+          y: { min: 0, max: 6, ticks: { callback: val => days[val] } }
+        }
+      }
+    });
+  });
+
+// =======================================
+// 3. Dynamic Scatter Plot
+// =======================================
+fetch("http://localhost:3000/api/engagement/scatter")
+  .then(res => res.json())
+  .then(data => {
+
+    const dataset = data.map(d => ({
+      x: d.post_volume,
+      y: d.engagement_per_post,
+      label: d.author_name
+    }));
+
+    new Chart(document.getElementById('scatterChart'), {
+      type: 'scatter',
+      data: { datasets: [{ data: dataset }] },
+      options: {
+        plugins: {
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                let d = ctx.raw;
+                return `${d.label}: Volume=${d.x}, Engagement=${d.y}`;
+              }
+            }
+          }
+        }
+      }
+    });
+  });
+
+  async function loadTrend(authorId) {
+    const res = await fetch(`http://localhost:3000/api/engagement/trend?author_id=${authorId}`);
+    const data = await res.json();
+
+    document.getElementById("trend-output").innerHTML = `
+        <h3>Engagement Trend (Author ${authorId})</h3>
+        <p><b>Last 7 days:</b> ${data.last_7_days}</p>
+        <p><b>Previous 7 days:</b> ${data.prev_7_days}</p>
+        <p><b>Change:</b> ${data.pct_change}%</p>
+    `;
+}
+
+
+</script>
+
+</body>
+</html>

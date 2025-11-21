@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Engagement Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    canvas { max-width: 800px; margin: 30px auto; display: block; }
+  </style>
+</head>
+<body>
+
+  <h2>Trend of Engagement by Author & Category</h2>
+  <canvas id="trendChart"></canvas>
+
+  <h2>Engagement Heatmap (Hour x Day)</h2>
+  <canvas id="heatmapChart"></canvas>
+
+  <h2>Volume vs Engagement per Post</h2>
+  <canvas id="scatterChart"></canvas>
+
+  <script>
+    // ===============================
+    // 1. Trend of Engagement (Line Chart)
+    // ===============================
+    const trendCtx = document.getElementById('trendChart').getContext('2d');
+    const trendChart = new Chart(trendCtx, {
+      type: 'line',
+      data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'], // months
+        datasets: [
+          {
+            label: 'Author: Alice',
+            data: [120, 150, 180, 130, 200],
+            borderColor: 'rgba(75, 192, 192, 1)',
+            fill: false,
+          },
+          {
+            label: 'Author: Bob',
+            data: [80, 100, 120, 90, 110],
+            borderColor: 'rgba(255, 99, 132, 1)',
+            fill: false,
+          },
+          {
+            label: 'Category: Tech',
+            data: [200, 250, 300, 220, 310],
+            borderColor: 'rgba(54, 162, 235, 1)',
+            fill: false,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: { display: true, text: 'Engagement Trend by Author & Category' }
+        }
+      }
+    });
+
+    // ===============================
+    // 2. Engagement Heatmap (Hour x Day)
+    // ===============================
+    const heatmapCtx = document.getElementById('heatmapChart').getContext('2d');
+
+    // Chart.js doesn’t have built-in heatmap, so we use scatter with color encoding
+    const heatmapData = {
+      datasets: []
+    };
+
+    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const hours = Array.from({length:24}, (_,i)=>i);
+
+    // generate sample data (random)
+    for(let d=0; d<days.length; d++){
+      for(let h=0; h<hours.length; h++){
+        heatmapData.datasets.push({
+          label: `${days[d]} ${h}:00`,
+          data: [{x: h, y: d, r: Math.random()*15 + 5}], // r = engagement intensity
+          backgroundColor: 'rgba(255, 99, 132, 0.6)'
+        });
+      }
+    }
+
+    const heatmapChart = new Chart(heatmapCtx, {
+      type: 'bubble',
+      data: heatmapData,
+      options: {
+        plugins: { 
+          title: { display: true, text: 'Engagement Heatmap (Hour x Day)' }
+        },
+        scales: {
+          x: { title: { display: true, text: 'Hour of Day' }, min: 0, max: 23 },
+          y: { title: { display: true, text: 'Day of Week' }, min: 0, max: 6, ticks: { callback: val => days[val] } }
+        }
+      }
+    });
+
+    // ===============================
+    // 3. Scatter plot: Volume vs Engagement per Post
+    // ===============================
+    const scatterCtx = document.getElementById('scatterChart').getContext('2d');
+
+    const scatterData = {
+      datasets: [
+        {
+          label: 'Posts',
+          data: [
+            {x: 5, y: 100},  // x = post volume, y = engagement per post
+            {x: 10, y: 50},
+            {x: 8, y: 120},
+            {x: 15, y: 30},
+            {x: 20, y: 70}
+          ],
+          backgroundColor: 'rgba(54, 162, 235, 0.8)'
+        }
+      ]
+    };
+
+    const scatterChart = new Chart(scatterCtx, {
+      type: 'scatter',
+      data: scatterData,
+      options: {
+        plugins: { title: { display: true, text: 'Volume vs Engagement per Post' } },
+        scales: {
+          x: { title: { display: true, text: 'Post Volume' } },
+          y: { title: { display: true, text: 'Engagement per Post' } }
+        }
+      }
+    });
+  </script>
+
+</body>
+</html>
